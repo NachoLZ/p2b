@@ -263,7 +263,7 @@ def feature_pipeline2(X_data, texto_vectorizer=None, texto_scaler_len=None, desc
 def get_database():
 
     # Provide the mongodb atlas url to connect python to mongodb using pymongo
-    CONNECTION_STRING = "mongodb://jmartinez:DyWFC92S5SgqLfmvCnDvrASNpo3TPvWRoX7uSaOD4MnN3zWEDtGrWdVUQcRVIF8iqAm7N2wk2nbGrNmXSc7xQw==@jmartinez.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@jmartinez@"
+    CONNECTION_STRING = "mongodb://127.0.0.1:27017/"
 
     # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
     client = MongoClient(CONNECTION_STRING)
