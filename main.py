@@ -419,7 +419,7 @@ def worker2():
     res_marcas = dict()
     for r in lista:
         res_marcas[r['_id']] = r['count']
-    print(res_marcas)
+    print(type(res_marcas))
     res = json.dumps(res_marcas)
     return res
 
@@ -634,7 +634,7 @@ def worker_est():
             res_ful.append(linre_ful.intercept + linre_ful.slope * u)
     r_squared_ful = linre.rvalue ** 2
     # print(res_ful)
-
+    print(type(resp))
     resp = json.dumps(resp)
     return resp
 
