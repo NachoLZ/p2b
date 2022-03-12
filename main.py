@@ -671,7 +671,7 @@ def worker_est():
             res_ful.append(linre_ful.intercept + linre_ful.slope * u)
     r_squared_ful = linre.rvalue ** 2
     # print(res_ful)
-
+    print(resp)
     resp = json.dumps(resp)
     return resp
 
