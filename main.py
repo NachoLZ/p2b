@@ -1,38 +1,36 @@
-import statsmodels.api as sm
-from bson.json_util import dumps
-import json
-from flask_cors import CORS, cross_origin
-from flask import Flask, render_template, request, redirect, Response
-from pymongo import MongoClient
-import pymongo
-import csv
-from sklearn.preprocessing import StandardScaler
-import string
-import re
-from keras.models import load_model
-from scipy import stats, optimize, interpolate
-import pickle
-import datetime
-import numpy as np
-import pandas as pd
-from nltk import word_tokenize
-from nltk.stem.snowball import SnowballStemmer
-import nltk
-from sklearn.metrics import mean_squared_log_error
-from scipy.sparse import hstack
-import scipy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from tqdm.notebook import tqdm
 tqdm.pandas()
+import scipy
+from scipy.sparse import hstack
+from sklearn.metrics import mean_squared_log_error
+import nltk
+from nltk.stem.snowball import SnowballStemmer
+from nltk import word_tokenize
+import pandas as pd
+import numpy as np
+import datetime
+import pickle
+from scipy import stats, optimize, interpolate
 nltk.download('punkt')
+from keras.models import load_model
+import re
+import string
+from sklearn.preprocessing import StandardScaler
+import csv
+import pymongo
+from pymongo import MongoClient
+from flask import Flask, render_template, request, redirect, Response
+from flask_cors import CORS, cross_origin
+import json
+from bson.json_util import dumps
+import statsmodels.api as sm
+import pickle
 app = Flask(__name__)
-
-
-def load_obj(name):
+def load_obj(name ):
     with open('./tools_2/' + name + '.pkl', 'rb') as f:
         return pickle.load(f)
-
 
 def stem(linea):
     ss = SnowballStemmer('spanish')
@@ -76,7 +74,6 @@ def fill_missing_values(df):
 
     return df
 
-
 def preprocess_descripcion(linea):
     """
     Description:
@@ -96,14 +93,11 @@ def preprocess_descripcion(linea):
     root_linea = stem(linea.lower().strip())
     return root_linea
 
-
-def get_day_feature(df, campo):
+def get_day_feature(df,campo):
     sparse_day = scipy.sparse.csr_matrix(df[campo].values)
-    # Now the shape will be (1111901, 1).
-    sparse_day = sparse_day.reshape(-1, 1)
-    print("Day:", sparse_day)
+    sparse_day = sparse_day.reshape(-1,1) # Now the shape will be (1111901, 1).
+    print("Day:",sparse_day)
     return sparse_day
-
 
 def get_len_feature(col_series, scaler_text_len=None):
     """
@@ -114,18 +108,16 @@ def get_len_feature(col_series, scaler_text_len=None):
     Output: standardized text length for each product and object of the fitted scaler
     """
     text_len = col_series.apply(lambda x: len(x.split()))
-    if scaler_text_len == None:
+    if scaler_text_len==None:
         scaler_text_len = StandardScaler()
         scaler_text_len.fit(text_len.values.reshape(-1, 1))
     text_len = scaler_text_len.transform(text_len.values.reshape(-1, 1))
     return text_len, scaler_text_len
 
-
 def split_text(text):
-    if text == 'unk_subclase':
-        return ["No Label", "No Label", "No Label", "No Label"]
-    return text[:3], text[3:5], text[5:7], text[7:]
-
+    if text=='unk_subclase':
+        return ["No Label", "No Label", "No Label","No Label"]
+    return text[:3],text[3:5],text[5:7],text[7:]
 
 def split_categories(df):
     """
@@ -137,11 +129,9 @@ def split_categories(df):
     Input: Dataframe having category_name field
     Output: Dataframe with splitted categories
     """
-    df['NIVEL_1'], df['NIVEL_2'], df['NIVEL_3'], df['NIVEL_4'] = zip(
-        *df['ID_SUBCLASE'].apply(lambda x: split_text(x)))
+    df['NIVEL_1'], df['NIVEL_2'], df['NIVEL_3'], df['NIVEL_4'] = zip(*df['ID_SUBCLASE'].apply(lambda x: split_text(x)))
     df = df.drop('ID_SUBCLASE', axis=1)
     return df
-
 
 def vectorize_data(col_data, vectorizer=None):
     """
@@ -151,14 +141,13 @@ def vectorize_data(col_data, vectorizer=None):
     Input: dataframe column
     Output: one-hot encoded values and the fitted vectorizer
     """
-    print("Col_data:", col_data)
-    if vectorizer == None:
-        vectorizer = TfidfVectorizer(ngram_range=(1, 7), max_features=100000)
+    print("Col_data:",col_data)
+    if vectorizer==None:
+        vectorizer = TfidfVectorizer(ngram_range=(1,7), max_features=100000)
         vectorizer.fit(col_data)
     ohe_data = vectorizer.transform(col_data)
     print("OHE_DATA:", ohe_data)
     return ohe_data, vectorizer
-
 
 def feature_pipeline(X_data, marca_vectorizer=None, modelo_vectorizer=None, desc_vectorizer=None, desc_scaler_len=None):
     """
@@ -173,42 +162,36 @@ def feature_pipeline(X_data, marca_vectorizer=None, modelo_vectorizer=None, desc
     print()
     print("pre-processing text data...")
 
-    X_data['ID_MARCA'] = X_data['ID_MARCA'].progress_apply(
-        lambda x: str(x).lower())
-    X_data['ID_MODELO'] = X_data['ID_MODELO'].progress_apply(
-        lambda x: str(x).lower())
-    X_data['DESC_ESTILO'] = X_data['DESC_ESTILO'].progress_apply(
-        lambda x: str(x).lower())
+    X_data['ID_MARCA'] = X_data['ID_MARCA'].progress_apply(lambda x: str(x).lower())
+    X_data['ID_MODELO'] = X_data['ID_MODELO'].progress_apply(lambda x: str(x).lower())
+    X_data['DESC_ESTILO'] = X_data['DESC_ESTILO'].progress_apply(lambda x: str(x).lower())
+
 
     print('Getting word lengths')
     #texto_len, texto_scaler_len = get_len_feature(X_data['ID_MARCA'], texto_scaler_len)
     #texto_len, texto_scaler_len = get_len_feature(X_data['ID_MODELO'], texto_scaler_len)
-    _, desc_scaler_len = get_len_feature(
-        X_data['DESC_ESTILO'], desc_scaler_len)
+    _, desc_scaler_len = get_len_feature(X_data['DESC_ESTILO'], desc_scaler_len)
 
     #print("Getting sparse day data...")
     #sparse_monday = get_day_feature(X_data,"C_MONDAY")
     #sparse_c_day = get_day_feature(X_data,"C_DAY")
 
     print("OHE vectorizing texto")
-    marca_ohe, marca_vectorizer = vectorize_data(
-        X_data['ID_MARCA'].values.astype('U'), marca_vectorizer)
-    modelo_ohe, modelo_vectorizer = vectorize_data(
-        X_data['ID_MODELO'].values.astype('U'), modelo_vectorizer)
-    desc_ohe, desc_vectorizer = vectorize_data(
-        X_data['DESC_ESTILO'].values.astype('U'), desc_vectorizer)
+    marca_ohe, marca_vectorizer = vectorize_data(X_data['ID_MARCA'].values.astype('U'), marca_vectorizer)
+    modelo_ohe, modelo_vectorizer = vectorize_data(X_data['ID_MODELO'].values.astype('U'), modelo_vectorizer)
+    desc_ohe, desc_vectorizer = vectorize_data(X_data['DESC_ESTILO'].values.astype('U'), desc_vectorizer)
     print("Texto done...")
 
     print("Creating the final featurized dataset...")
     X_featurized = hstack((marca_ohe,
                            modelo_ohe,
                            desc_ohe,
-                           X_data['DIA'].values.reshape(-1, 1),
-                           X_data['MES'].values.reshape(-1, 1),
-                           X_data['DESCUENTO'].values.reshape(-1, 1)
-                           # sparse_monday,
-                           # sparse_c_day
-                           )).tocsr()
+                           X_data['DIA'].values.reshape(-1,1),
+                           X_data['MES'].values.reshape(-1,1),
+                           X_data['DESCUENTO'].values.reshape(-1,1)
+                           #sparse_monday,
+                           #sparse_c_day
+                          )).tocsr()
 
     print("Done!!!\n---------------------------\n")
     print(X_featurized.shape)
@@ -228,24 +211,19 @@ def feature_pipeline2(X_data, texto_vectorizer=None, texto_scaler_len=None, desc
     print()
     print("pre-processing text data...")
 
-    X_data['Descripcion'] = X_data['Descripcion'].progress_apply(
-        lambda x: str(x).lower())
+    X_data['Descripcion'] = X_data['Descripcion'].progress_apply(lambda x: str(x).lower())
     X_data['Texto'] = X_data['Texto'].progress_apply(lambda x: str(x).lower())
 
     print('Getting word lengths')
-    texto_len, texto_scaler_len = get_len_feature(
-        X_data['Texto'], texto_scaler_len)
-    desc_len, desc_scaler_len = get_len_feature(
-        X_data['Descripcion'], desc_scaler_len)
+    texto_len, texto_scaler_len = get_len_feature(X_data['Texto'], texto_scaler_len)
+    desc_len, desc_scaler_len = get_len_feature(X_data['Descripcion'], desc_scaler_len)
     # print("Getting sparse day data...")
     # sparse_monday = get_day_feature(X_data,"C_MONDAY")
     # sparse_c_day = get_day_feature(X_data,"C_DAY")
 
     print("OHE vectorizing texto")
-    texto_ohe, texto_vectorizer = vectorize_data(
-        X_data['Texto'].values.astype('U'), texto_vectorizer)
-    desc_ohe, desc_vectorizer = vectorize_data(
-        X_data['Descripcion'].values.astype('U'), desc_vectorizer)
+    texto_ohe, texto_vectorizer = vectorize_data(X_data['Texto'].values.astype('U'), texto_vectorizer)
+    desc_ohe, desc_vectorizer = vectorize_data(X_data['Descripcion'].values.astype('U'), desc_vectorizer)
     print("Texto done...")
 
     print("Creating the final featurized dataset...")
@@ -259,7 +237,6 @@ def feature_pipeline2(X_data, texto_vectorizer=None, texto_scaler_len=None, desc
     print(X_featurized.shape)
     return X_featurized, texto_vectorizer, texto_scaler_len, desc_vectorizer, desc_scaler_len
 
-
 def get_database():
 
     # Provide the mongodb atlas url to connect python to mongodb using pymongo
@@ -271,50 +248,49 @@ def get_database():
     # Create the database for our example (we will use the same database throughout the tutorial
     return client.price2be
 
-
 ruta_modelo_inicio = "./Modelos/Entrega/"
 ruta_vectorizadores = "./Vectorizadores/"
 rutas = ['J11',
          'J04',
          'J03',
-         # 'J01',
-         # 'J08',
-         # 'J09',
-         # 'J12',
-         # 'J10',
-         # 'J02',
-         # 'J15',
-         # 'J05',
-         # 'J06',
-         # 'J17',
-         # 'J07',
-         # 'J16',
-         # 'J99_J14_J18_J95_J98_J13_J32'
+         #'J01',
+         #'J08',
+         #'J09',
+         #'J12',
+         #'J10',
+         #'J02',
+         #'J15',
+         #'J05',
+         #'J06',
+         #'J17',
+         #'J07',
+         #'J16',
+         #'J99_J14_J18_J95_J98_J13_J32'
          ]
 
 lista_modelos = {
     'J11': 0,
     'J04': 1,
     'J03': 2,
-    # 'J01': 3,
-    # 'J08': 4,
-    # 'J09': 5,
-    # 'J12': 6,
-    # 'J10': 7,
-    # 'J02': 8,
-    # 'J15': 9,
-    # 'J05': 10,
-    # 'J06': 11,
-    # 'J17': 3,
-    # 'J07': 3,
-    # 'J16': 5,
-    # 'J99': 15,
-    # 'J14': 15,
-    # 'J18': 15,
-    # 'J95': 15,
-    # 'J98': 15,
-    # 'J13': 15,
-    # 'J32': 15
+    #'J01': 3,
+    #'J08': 4,
+    #'J09': 5,
+    #'J12': 6,
+    #'J10': 7,
+    #'J02': 8,
+    #'J15': 9,
+    #'J05': 10,
+    #'J06': 11,
+    #'J17': 3,
+    #'J07': 3,
+    #'J16': 5,
+    #'J99': 15,
+    #'J14': 15,
+    #'J18': 15,
+    #'J95': 15,
+    #'J98': 15,
+    #'J13': 15,
+    #'J32': 15
 }
 
 caso = {
@@ -348,7 +324,6 @@ dic["Moda"] = "J05020102"
 
 
 CORS(app)
-
 
 @app.route('/receiver', methods=['POST'])
 def worker():
@@ -385,14 +360,10 @@ def worker():
     ruta = ruta_modelo_inicio + nombre_modelo
     modelo = load_model(ruta)
 
-    marca_vectorizer = pickle.load(
-        open(ruta_vectorizadores + cat + "/marca_vectorizer.pickle", "rb"))
-    modelo_vectorizer = pickle.load(
-        open(ruta_vectorizadores + cat + "/modelo_vectorizer.pickle", "rb"))
-    desc_vectorizer = pickle.load(
-        open(ruta_vectorizadores + cat + "/desc_vectorizer.pickle", "rb"))
-    desc_scaler_len = pickle.load(
-        open(ruta_vectorizadores + cat + "/desc_scaler_len.pickle", "rb"))
+    marca_vectorizer = pickle.load(open(ruta_vectorizadores + cat + "/marca_vectorizer.pickle", "rb"))
+    modelo_vectorizer = pickle.load(open(ruta_vectorizadores + cat + "/modelo_vectorizer.pickle", "rb"))
+    desc_vectorizer = pickle.load(open(ruta_vectorizadores + cat + "/desc_vectorizer.pickle", "rb"))
+    desc_scaler_len = pickle.load(open(ruta_vectorizadores + cat + "/desc_scaler_len.pickle", "rb"))
 
     caso_de_prueba = pd.DataFrame(input_modelo, index=[0])
 
@@ -431,8 +402,7 @@ def worker2():
     pipeline = [
         {"$match": {"$text": {"$search": nombre}}},
         {"$sort": {"score": {"$meta": "textScore"}}},
-        {"$project": {"nombre": 1, "marca": 1,
-                      "_id": 0, "score": {"$meta": "textScore"}}},
+        {"$project": {"nombre": 1, "marca": 1, "_id": 0, "score": {"$meta": "textScore"}}},
         {"$match": {"score": {"$gte": 0.6}}},
         {"$group": {"_id": "$marca", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}}
@@ -474,16 +444,14 @@ def worker3():
     pipeline = [
         {"$match": {"$text": {"$search": nombre}}},
         {"$sort": {"score": {"$meta": "textScore"}}},
-        {"$project": {"nombre": 1, "dominio": 1, "link": 1,
-                      "_id": 0, "score": {"$meta": "textScore"}}},
+        {"$project": {"nombre": 1, "dominio": 1, "link": 1, "_id": 0, "score": {"$meta": "textScore"}}},
         {"$match": {"score": {"$gte": 2.0}}},
         {"$limit": 3}
     ]
     results = db.catalogo_productos.aggregate(pipeline, allowDiskUse=True)
     c = 1
     for row in results:
-        res['link' + str(c)] = row['dominio'] + ";" + \
-            row['nombre'] + ";" + row['link']
+        res['link' + str(c)] = row['dominio'] + ";" + row['nombre'] + ";" + row['link']
         c += 1
     return res
 
@@ -554,14 +522,10 @@ def worker4():
         ruta = ruta_modelo_inicio + nombre_modelo
         modelo = load_model(ruta)
 
-        marca_vectorizer = pickle.load(
-            open(ruta_vectorizadores + cat + "/marca_vectorizer.pickle", "rb"))
-        modelo_vectorizer = pickle.load(
-            open(ruta_vectorizadores + cat + "/modelo_vectorizer.pickle", "rb"))
-        desc_vectorizer = pickle.load(
-            open(ruta_vectorizadores + cat + "/desc_vectorizer.pickle", "rb"))
-        desc_scaler_len = pickle.load(
-            open(ruta_vectorizadores + cat + "/desc_scaler_len.pickle", "rb"))
+        marca_vectorizer = pickle.load(open(ruta_vectorizadores + cat + "/marca_vectorizer.pickle", "rb"))
+        modelo_vectorizer = pickle.load(open(ruta_vectorizadores + cat + "/modelo_vectorizer.pickle", "rb"))
+        desc_vectorizer = pickle.load(open(ruta_vectorizadores + cat + "/desc_vectorizer.pickle", "rb"))
+        desc_scaler_len = pickle.load(open(ruta_vectorizadores + cat + "/desc_scaler_len.pickle", "rb"))
 
         caso_de_prueba = pd.DataFrame(input_modelo, index=[0])
 
@@ -639,8 +603,7 @@ def worker_est():
     if len(ventas) == 0:
         ventas = np.zeros(24)
     resp = dict()
-    resp['meses'] = ['Diciembre', 'Enero',
-                     'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio']
+    resp['meses'] = ['Diciembre', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio']
     resp['meses_ful'] = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre',
                          'Octubre', 'Noviembre', 'Diciembre']
     avg = list()
@@ -671,7 +634,7 @@ def worker_est():
             res_ful.append(linre_ful.intercept + linre_ful.slope * u)
     r_squared_ful = linre.rvalue ** 2
     # print(res_ful)
-    print(resp)
+
     resp = json.dumps(resp)
     return resp
 
@@ -736,10 +699,8 @@ def worker_sar():
     if len(ventas) == 0:
         ventas = np.zeros(24)
     resp = dict()
-    resp['meses'] = ['Diciembre', 'Enero',
-                     'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio']
-    model = sm.tsa.statespace.SARIMAX(
-        ventas, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+    resp['meses'] = ['Diciembre', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio']
+    model = sm.tsa.statespace.SARIMAX(ventas, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
     results = model.fit()
     temp = list(results.predict(start=24, end=31, dynamic=True)[1:])
     # temp = np.where(temp<0, 0, temp)
@@ -761,8 +722,7 @@ def worker_tags():
     pipeline = [
         {"$match": {"$text": {"$search": data['nombre']}}},
         {"$sort": {"score": {"$meta": "textScore"}}},
-        {"$project": {"nombre": 1, "marca": 1, "tags": 1,
-                      "_id": 0, "score": {"$meta": "textScore"}}},
+        {"$project": {"nombre": 1, "marca": 1, "tags": 1, "_id": 0, "score": {"$meta": "textScore"}}},
         {"$match": {"score": {"$gte": score}}}
     ]
     lista = list(db.catalogo_productos.aggregate(pipeline, allowDiskUse=True))
@@ -803,8 +763,7 @@ def worker5():
     data = request.get_json()
     mail = data["email"]
     print(mail)
-    cursor = db.publicaciones.find(
-        {"$and": [{'activa': 1}, {'email': data['email']}]})
+    cursor = db.publicaciones.find({"$and": [{'activa': 1}, {'email': data['email']}]})
     list_cur = list(cursor)
     json_data = dumps(list_cur)
     print(json_data)
@@ -815,8 +774,7 @@ def worker5():
 def worker_6():
     db = get_database()
     data = request.get_json()
-    filtro = {"$and": [{"nombre": data["nombre"]},
-                       {'email': data['email']}, {'activa': 1}]}
+    filtro = {"$and": [{"nombre": data["nombre"]}, {'email': data['email']}, {'activa': 1}]}
     print(filtro)
     nuevo = {"$set": {"precio": data["precio"]}}
     print(nuevo)
@@ -829,8 +787,7 @@ def worker_6():
 def worker7():
     db = get_database()
     data = request.get_json()
-    filtro = {"$and": [{"nombre": data["nombre"]},
-                       {'email': data['email']}, {'activa': 1}]}
+    filtro = {"$and": [{"nombre": data["nombre"]}, {'email': data['email']}, {'activa': 1}]}
     print(filtro)
     nuevo = {"$set": {"activa": 0}}
     print(nuevo)
@@ -843,8 +800,7 @@ def worker7():
 def worker8():
     db = get_database()
     data = request.get_json()
-    cursor = db.publicaciones.find(
-        {"$and": [{'activa': 0}, {'email': data['email']}]})
+    cursor = db.publicaciones.find({"$and": [{'activa': 0}, {'email': data['email']}]})
     list_cur = list(cursor)
     json_data = dumps(list_cur)
     print(json_data)
@@ -866,3 +822,8 @@ def worker9():
 
 if __name__ == "__main__":
     app.run()
+
+
+
+
+
