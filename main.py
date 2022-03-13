@@ -709,16 +709,16 @@ def worker_sar():
         if temp[i] < 0:
             temp[i] = 0
     resp['SAR'] = list(temp)
-    print("VENTAS")
-    print(ventas)
-    print("LEN VENTAS")
-    print(len(ventas))
-    print("RESS")
-    print(ress[:22])
-    print("LEN RESS")
-    print(len(ress[:22]))
-    mse=mean_squared_error(ventas,ress[:22])
-    msle=mean_squared_log_error(ventas,ress[:22])
+    #print("VENTAS")
+    #print(ventas)
+    #print("LEN VENTAS")
+    #print(len(ventas))
+    #print("RESS")
+    #print(ress[:22])
+    #print("LEN RESS")
+    #print(len(ress[:22]))
+    mse=mean_squared_error(ventas[:22],ress[:22])
+    msle=mean_squared_log_error(ventas[:22],ress[:22])
     resp['msle']=msle
     resp['mse']=mse
     resp = json.dumps(resp)
