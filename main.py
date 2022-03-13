@@ -4,7 +4,7 @@ from tqdm.notebook import tqdm
 tqdm.pandas()
 import scipy
 from scipy.sparse import hstack
-from sklearn.metrics import mean_squared_log_error, mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_squared_log_error
 import nltk
 from nltk.stem.snowball import SnowballStemmer
 from nltk import word_tokenize
@@ -253,44 +253,44 @@ ruta_vectorizadores = "./Vectorizadores/"
 rutas = ['J11',
          'J04',
          'J03',
-         #'J01',
-         #'J08',
-         #'J09',
-         #'J12',
-         #'J10',
-         #'J02',
-         #'J15',
-         #'J05',
-         #'J06',
-         #'J17',
-         #'J07',
-         #'J16',
-         #'J99_J14_J18_J95_J98_J13_J32'
+         'J01',
+         'J08',
+         'J09',
+         'J12',
+         'J10',
+         'J02',
+         'J15',
+         'J05',
+         'J06',
+         'J17',
+         'J07',
+         'J16',
+         'J99_J14_J18_J95_J98_J13_J32'
          ]
 
 lista_modelos = {
     'J11': 0,
     'J04': 1,
     'J03': 2,
-    #'J01': 3,
-    #'J08': 4,
-    #'J09': 5,
-    #'J12': 6,
-    #'J10': 7,
-    #'J02': 8,
-    #'J15': 9,
-    #'J05': 10,
-    #'J06': 11,
-    #'J17': 3,
-    #'J07': 3,
-    #'J16': 5,
-    #'J99': 15,
-    #'J14': 15,
-    #'J18': 15,
-    #'J95': 15,
-    #'J98': 15,
-    #'J13': 15,
-    #'J32': 15
+    'J01': 3,
+    'J08': 4,
+    'J09': 5,
+    'J12': 6,
+    'J10': 7,
+    'J02': 8,
+    'J15': 9,
+    'J05': 10,
+    'J06': 11,
+    'J17': 3,
+    'J07': 3,
+    'J16': 5,
+    'J99': 15,
+    'J14': 15,
+    'J18': 15,
+    'J95': 15,
+    'J98': 15,
+    'J13': 15,
+    'J32': 15
 }
 
 caso = {
@@ -419,7 +419,7 @@ def worker2():
     res_marcas = dict()
     for r in lista:
         res_marcas[r['_id']] = r['count']
-    print(type(res_marcas))
+    print(res_marcas)
     res = json.dumps(res_marcas)
     return res
 
@@ -619,7 +619,7 @@ def worker_est():
         res.append(linre.intercept + linre.slope * u)
     r_squared = linre.rvalue ** 2
     resp['linre'] = res
-    resp['r_squared'] = r_squared
+    resp['r_squared'] = round(r_squared, 3)
     # print('r_squared: '+str(r_squared))
     # print(res)
 
@@ -634,7 +634,7 @@ def worker_est():
             res_ful.append(linre_ful.intercept + linre_ful.slope * u)
     r_squared_ful = linre.rvalue ** 2
     # print(res_ful)
-    print(type(resp))
+
     resp = json.dumps(resp)
     return resp
 
@@ -715,6 +715,7 @@ def worker_sar():
     resp['mse']=mse
     resp = json.dumps(resp)
     return resp
+
 
 @app.route('/tags', methods=['POST'])
 def worker_tags():
@@ -825,8 +826,3 @@ def worker9():
 
 if __name__ == "__main__":
     app.run()
-
-
-
-
-
