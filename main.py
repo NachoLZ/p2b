@@ -699,19 +699,22 @@ def worker_sar():
     if len(ventas) == 0:
         ventas = np.zeros(24)
     resp = dict()
-    resp['meses'] = ['Diciembre', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio']
-    model = sm.tsa.statespace.SARIMAX(ventas, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+    resp['meses'] = ['Marzo', 'Abril', 'Mayo', 'Junio','Julio', 'Agosto', 'Septiembre']
+    model = sm.tsa.statespace.SARIMAX(ventas, order=(5, 1, 0), seasonal_order=(1, 1, 2, 12))
     results = model.fit()
-    temp = list(results.predict(start=24, end=31, dynamic=True)[1:])
+    ress=results.predict(start=1,end=31,dynamic=False)
+    temp = list(ress[15:22])
     # temp = np.where(temp<0, 0, temp)
     for i in range(len(temp)):
         if temp[i] < 0:
             temp[i] = 0
     resp['SAR'] = list(temp)
-
+    mse=mean_squared_error(ventas,ress[:22])
+    msle=mean_squared_log_error(ventas,ress[:22])
+    resp['msle']=msle
+    resp['mse']=mse
     resp = json.dumps(resp)
     return resp
-
 
 @app.route('/tags', methods=['POST'])
 def worker_tags():
