@@ -697,7 +697,7 @@ def worker_sar():
         break
     print(ventas)
     if len(ventas) == 0:
-        ventas = np.zeros(24)
+        ventas = np.zeros(22)
     resp = dict()
     resp['meses'] = ['Marzo', 'Abril', 'Mayo', 'Junio','Julio', 'Agosto', 'Septiembre']
     model = sm.tsa.statespace.SARIMAX(ventas, order=(5, 1, 0), seasonal_order=(1, 1, 2, 12))
