@@ -4,7 +4,7 @@ from tqdm.notebook import tqdm
 tqdm.pandas()
 import scipy
 from scipy.sparse import hstack
-from sklearn.metrics import mean_squared_log_error
+from sklearn.metrics import mean_squared_log_error, mean_squared_error
 import nltk
 from nltk.stem.snowball import SnowballStemmer
 from nltk import word_tokenize
@@ -697,7 +697,7 @@ def worker_sar():
         break
     print(ventas)
     if len(ventas) == 0:
-        ventas = np.zeros(24)
+        ventas = np.zeros(22)
     resp = dict()
     resp['meses'] = ['Marzo', 'Abril', 'Mayo', 'Junio','Julio', 'Agosto', 'Septiembre']
     model = sm.tsa.statespace.SARIMAX(ventas, order=(5, 1, 0), seasonal_order=(1, 1, 2, 12))
