@@ -708,15 +708,10 @@ def worker_sar():
     for i in range(len(temp)):
         if temp[i] < 0:
             temp[i] = 0
+    for i in range(len(ress)):
+        if ress[i] < 0:
+            ress[i] = 0
     resp['SAR'] = list(temp)
-    #print("VENTAS")
-    #print(ventas)
-    #print("LEN VENTAS")
-    #print(len(ventas))
-    #print("RESS")
-    #print(ress[:22])
-    #print("LEN RESS")
-    #print(len(ress[:22]))
     mse=mean_squared_error(ventas[:22],ress[:22])
     msle=mean_squared_log_error(ventas[:22],ress[:22])
     resp['msle']=msle
