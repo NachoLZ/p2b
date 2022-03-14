@@ -333,8 +333,6 @@ def worker():
     nombre = data['nombre'].lower()
     marca = data['marca'].lower()
     modelo = data['modelo'].lower()
-    dia = int(data['dia'])
-    mes = int(data['mes'])
     categoria = dic[data['categoria']]
     # n1, n2, n3, n4 = split_text(categoria)
 
@@ -344,8 +342,8 @@ def worker():
         'ID_MARCA': marca,
         'ID_MODELO': modelo,
         'DESC_ESTILO': nombre,
-        'DIA': dia,
-        'MES': mes,
+        'DIA': 18,
+        'MES': 3,
         'C_MONDAY': 0,
         'C_DAY': 0,
         'DESCUENTO': 0
