@@ -342,8 +342,8 @@ def worker():
         'ID_MARCA': marca,
         'ID_MODELO': modelo,
         'DESC_ESTILO': nombre,
-        'DIA': 18,
-        'MES': 3,
+        'DIA': datetime.datetime.now().day,
+        'MES': datetime.datetime.now().month,
         'C_MONDAY': 0,
         'C_DAY': 0,
         'DESCUENTO': 0
@@ -491,12 +491,10 @@ def worker4():
     nombre = data['nombre'].lower()
     marca = data['marca'].lower()
     modelo = data['modelo'].lower()
-    dia = int(data['dia'])
-    mes = int(data['mes'])
     categoria = dic[data['categoria']]
 
     annio = datetime.datetime.now().year
-    fecha = datetime.datetime(annio, mes, dia)
+    fecha = datetime.datetime.now()
     for i in range(0, 17):
         fecha = fecha + datetime.timedelta(days=7)
         dia = fecha.day
