@@ -321,7 +321,8 @@ dic["Utensilios de Cocina"] = "J11090124"
 dic["Electronica"] = "J11141201"
 dic["Electrodomesticos, Para Cocina"] = "J11090124"
 dic["Moda"] = "J05020102"
-
+dic["Higiene"] = "J11090124"
+dic["Tecnologia"] = "J11090124"
 
 CORS(app)
 
