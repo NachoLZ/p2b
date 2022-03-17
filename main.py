@@ -711,7 +711,7 @@ def worker_sar():
     resp['SAR'] = list(temp)
     mse=mean_squared_error(ventas[:22],ress[:22])
     msle=mean_squared_log_error(ventas[:22],ress[:22])
-    resp['msle']=msle
+    resp['msle']=round(msle, 3)
     resp['mse']=mse
     resp = json.dumps(resp)
     return resp
